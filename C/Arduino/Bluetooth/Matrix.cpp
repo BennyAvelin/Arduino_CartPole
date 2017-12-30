@@ -1,8 +1,11 @@
 #include"Matrix.h"
 #include<stdlib.h>
+#ifndef X86
 #include<Arduino.h>
-//#include<iostream>
-using namespace std;
+#else
+#include<iostream>
+#endif
+
 float DNULL = 0.0;
 
 Matrix::Matrix(){
@@ -140,16 +143,29 @@ Tuple Matrix::shape(){
 }
 
 void Matrix::print(){
+#ifndef X86
 	Serial.print("Matrix :");
 	Serial.print(this->rows);
 	Serial.print(" ");
 	Serial.print(this->columns);
 	Serial.print("\n");
+#else
+	std::cout << "Matrix :" << this->rows << " " << this->columns;
+	std::cout << std::endl;
+#endif
 	for (int x = 0; x<rows; x++) {
 		for (int y = 0; y < columns; y++ ) {
+#ifndef X86
 			Serial.print(get(x,y));
 			Serial.print("\t");
+#else
+			std::cout << get(x,y) << "\t";
+#endif
 		}
+#ifndef X86
 		Serial.print("\n");
+#else
+		std::cout << std::endl;
+#endif
 	}
 }

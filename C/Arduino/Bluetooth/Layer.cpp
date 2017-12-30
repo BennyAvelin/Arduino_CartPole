@@ -1,6 +1,10 @@
 #include "Layer.h"
 #include "Matrix.h"
+#ifndef X86
 #include<Arduino.h>
+#else
+#include<iostream>
+#endif
 
 Layer::Layer(){}
 
