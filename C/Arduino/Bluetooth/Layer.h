@@ -5,14 +5,15 @@
 
 class Layer {
 	Tuple shape;
-	Matrix *weights;
-	Matrix *bias;
+	Matrix weights;
+	Matrix bias;
 	float (*activation)(float);
 public:
 	Layer();
 	Layer(Matrix &weights, Matrix &bias, float (*activation)(float));
 	Layer(Layer &obj);
 	~Layer();
+	Layer& operator=(Layer B);
 	Matrix transform(Matrix &input);
 	Matrix getWeights();
 	Matrix getBias();
@@ -21,4 +22,11 @@ public:
 	
 	void updateWeights(Matrix &newWeights, Matrix &newBias);
 };
+extern float relu_func(float input);
+extern float linear_func(float input);
+
+struct {
+  float (*relu)(float) = *relu_func;
+  float (*linear)(float) = *linear_func;
+} Activations;
 #endif

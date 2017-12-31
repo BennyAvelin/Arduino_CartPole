@@ -4,27 +4,29 @@
 
 class Matrix {
     float *matrix;
-	int rows;
-	int columns;
-	int totalSize;
+	short rows;
+	short columns;
+	short totalSize;
   public:
 	  Matrix();
 	  Matrix( const Matrix &obj);
-	  Matrix( float *input, int rows, int columns);
-	  Matrix( int rows, int columns);
-	  Matrix( int rows, int columns, float initialValue);
+	  Matrix( float *input, short rows, short columns);
+	  Matrix( short rows, short columns);
+	  Matrix( short rows, short columns, float initialValue);
 	  ~Matrix();
-	  float &get(int row, int column); //Returns the value at row, column
+	  float &get(short row, short column); //Returns the value at row, column
 	  //column for setting.
-	  float &operator[](int index); //Gets a pointer to the location holding the
+	  float &operator[](short index); //Gets a poshorter to the location holding the
 	  Matrix operator+(Matrix &B);
 	  Matrix operator-(Matrix &B);
 	  Matrix operator*(Matrix &B);
 	  Matrix operator*(float scale);
+	  Matrix& operator=(Matrix B);
 	  Matrix pm(Matrix &B);
 	  Matrix apply(float (*f)(float));
 	  Matrix transpose(); //Returns a transpose of the matrix
 	  Tuple shape();
+	  float *getRawData();
 	  //Matrix operator+(float num);
 	  //Matrix operator-(float num);
 	  void print();

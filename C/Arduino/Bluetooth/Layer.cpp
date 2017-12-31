@@ -6,36 +6,63 @@
 #include<iostream>
 #endif
 
-Layer::Layer(){}
+float relu_func(float input) {
+  return (input > 0) ? input : 0;
+}
+
+float linear_func(float input) {
+  return input;
+}
+
+Layer::Layer(){
+#ifdef X86
+  std::cout << "Layer  constructed empty" << std::endl;
+#endif
+}
 
 Layer::Layer(Layer & obj){
-	this->weights = new Matrix(*obj.weights);
-	this->bias = new Matrix(*obj.bias);
-	this->activation = *activation;
-	this->shape = weights->shape();
+#ifdef X86
+  std::cout << "Layer  copied" << std::endl;
+#endif
+	this->weights = obj.weights;
+	this->bias = obj.bias;
+	this->activation = *obj.activation;
+	this->shape = weights.shape();
 }
 
 Layer::Layer(Matrix &weights, Matrix &bias, float (*activation)(float)){
-	this->weights = new Matrix(weights);
-	this->bias = new Matrix(bias);
+#ifdef X86
+  std::cout << "Layer  being specified" << std::endl;
+#endif
+	this->weights = weights;
+	this->bias = bias;
 	this->activation = *activation;
-	this->shape = this->weights->shape();
+	this->shape = this->weights.shape();
 }
 
 Matrix Layer::transform(Matrix &input){
-	return ((input*(*weights))+(*bias)).apply(activation);
+	return ((input*(weights))+(bias)).apply(activation);
 }
 
 Layer::~Layer(){
-	delete weights;
-	delete bias;
+}
+
+Layer& Layer::operator=(Layer obj){
+#ifdef X86
+  std::cout << "Layer  copied by equals" << std::endl;
+#endif
+  this->weights = obj.weights;
+  this->bias = obj.bias;
+  this->activation = *obj.activation;
+  this->shape = weights.shape();
+  return *this;
 }
 
 Matrix Layer::getWeights(){
-	return Matrix(*weights);
+	return Matrix(weights);
 }
 Matrix Layer::getBias(){
-	return Matrix(*bias);
+	return Matrix(bias);
 }
 
 float (*(Layer::getActivation()))(float){
@@ -43,10 +70,8 @@ float (*(Layer::getActivation()))(float){
 }
 
 void Layer::updateWeights(Matrix &newWeights, Matrix &newBias){
-	delete weights;
-	delete bias;
-	weights = new Matrix(newWeights);
-	bias = new Matrix(newBias);
+	weights = newWeights;
+	bias = newBias;
 }
 
 Tuple Layer::getShape(){
