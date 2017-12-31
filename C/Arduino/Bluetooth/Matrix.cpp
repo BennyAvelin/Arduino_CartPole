@@ -2,8 +2,11 @@
 #include<stdlib.h>
 
 #ifndef X86
+#define NULLCHECK if (this->matrix == NULL && rows*columns != 0) digitalWrite(LED_BUILTIN, HIGH);
 #include<Arduino.h>
+#include "BinarySerial.h"
 #else
+#define NULLCHECK
 #include<iostream>
 #endif
 
@@ -25,6 +28,7 @@ Matrix::Matrix( float *input, short rows, short columns) {
 	this->columns = columns;
 	this->totalSize = rows*columns;
 	this->matrix = (float *) malloc(sizeof(float)*rows*columns);
+  NULLCHECK
 	memcpy(this->matrix,input,sizeof(float)*totalSize);
 }
 
@@ -36,6 +40,7 @@ Matrix::Matrix( const Matrix &obj) {
 	this->columns = obj.columns;
 	this->totalSize = rows*columns;
 	this->matrix = (float *) malloc(sizeof(float)*rows*columns);
+  NULLCHECK
 	memcpy(this->matrix,obj.matrix,sizeof(float)*totalSize);
 }
 
@@ -47,6 +52,7 @@ Matrix::Matrix( short rows, short columns) {
 	this->columns = columns;
 	this->totalSize = rows*columns;
 	this->matrix = (float *) malloc(sizeof(float)*rows*columns);
+  NULLCHECK
 }
 
 Matrix::Matrix( short rows, short columns, float initialValue){
@@ -57,6 +63,7 @@ Matrix::Matrix( short rows, short columns, float initialValue){
 	this->columns = columns;
 	this->totalSize = rows*columns;
 	this->matrix = (float *) malloc(sizeof(float)*rows*columns);
+  NULLCHECK
 	for (short index = 0; index < totalSize; index++) {
 		matrix[index] = initialValue;
 	}
@@ -133,7 +140,7 @@ Matrix Matrix::operator*(float scale) {
 	return retval;
 }
 
-Matrix& Matrix::operator=(Matrix obj) {
+Matrix& Matrix::operator=(const Matrix &obj) {
 #ifdef X86
 	std::cout << "Matrix constructed by equals" << this << &obj << std::endl;
 #endif
@@ -146,6 +153,7 @@ Matrix& Matrix::operator=(Matrix obj) {
 	this->columns = obj.columns;
 	this->totalSize = rows*columns;
 	this->matrix = (float *) malloc(sizeof(float)*rows*columns);
+  NULLCHECK
 	memcpy(this->matrix,obj.matrix,sizeof(float)*totalSize);
 	return *this;
 }
@@ -187,17 +195,17 @@ float *Matrix::getRawData(){
 
 void Matrix::print(){
 #ifndef X86
-	Serial.print("Matrix :");
+	Serial.print(F("Matrix :"));
 	Serial.print(this->rows);
-	Serial.print(" ");
+	Serial.print(F(" "));
 	Serial.print(this->columns);
-	Serial.print("\n");
+	Serial.print(F("\n"));
 	for (short x = 0; x<rows; x++) {
 		for (short y = 0; y < columns; y++ ) {
 			Serial.print(get(x,y));
-			Serial.print("\t");
+			Serial.print(F("\t"));
 		}
-		Serial.print("\n");
+		Serial.print(F("\n"));
 	}
 #else
 	std::cout << "Matrix :" << this->rows << " ";
@@ -212,3 +220,20 @@ void Matrix::print(){
 	}
 #endif
 }
+
+#ifndef X86
+    Matrix Matrix::fromSerial(){
+      int rows = 0;
+      int columns = 0;
+  
+      BinarySerial::readInt(rows);
+      BinarySerial::readInt(columns);
+      //Serial.readBytes((char*) &rows,sizeof(int));
+      //Serial.readBytes((char*) &columns,sizeof(int));
+      float buffer[rows*columns];
+      BinarySerial::nFloatsFromSerial(buffer,rows*columns);
+  
+      Matrix tmp (buffer,rows,columns);
+      return tmp;
+    }
+#endif

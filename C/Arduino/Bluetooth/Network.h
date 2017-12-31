@@ -12,7 +12,8 @@ public:
 	~Network();
 	Matrix transform(Matrix &input);
 	Layer& operator[](short index);
-	void addStage(Layer &stage);
+	void addStage(const Layer &stage);
+  static Network fromSerial(int n);
 };
 
 #endif

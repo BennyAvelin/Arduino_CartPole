@@ -32,8 +32,17 @@ Layer &Network::operator[](short index){
 	return layers[index];
 }
 
-void Network::addStage(Layer &stage){
+void Network::addStage(const Layer &stage){
 	if (filledLayers < numLayers){
 		layers[filledLayers++] = stage;
 	}
 }
+
+Network Network::fromSerial(int n){
+  Network net (n);
+  for (int i=0; i<n; i++) {
+    net.addStage(Layer::fromSerial());
+  }
+  return net;
+}
+

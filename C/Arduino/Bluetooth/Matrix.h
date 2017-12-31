@@ -21,12 +21,15 @@ class Matrix {
 	  Matrix operator-(Matrix &B);
 	  Matrix operator*(Matrix &B);
 	  Matrix operator*(float scale);
-	  Matrix& operator=(Matrix B);
+	  Matrix& operator=(const Matrix &B);
 	  Matrix pm(Matrix &B);
 	  Matrix apply(float (*f)(float));
 	  Matrix transpose(); //Returns a transpose of the matrix
 	  Tuple shape();
 	  float *getRawData();
+    #ifndef X86
+    static Matrix fromSerial();
+    #endif
 	  //Matrix operator+(float num);
 	  //Matrix operator-(float num);
 	  void print();

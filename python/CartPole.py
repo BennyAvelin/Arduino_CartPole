@@ -52,7 +52,7 @@ def sendArrayToSerial(ser,array):
     if (len(array.shape) > 1):
         columns = array.shape[1]
     ser.write(struct.pack('h',rows)+struct.pack('h',columns))
-    ser.write(bytearr)
+    ser.write(bytes(bytearr))
 
 def recieveArrayFromSerial(ser):
     sizeOfInt = 2
@@ -67,11 +67,20 @@ def recieveArrayFromSerial(ser):
 
 weights = dqn.layers[1].get_weights()[0]
 bias = dqn.layers[1].get_weights()[1]
+weights1 = dqn.layers[3].get_weights()[0]
+bias1 = dqn.layers[3].get_weights()[1]
 inputs = np.reshape(np.array([1.0,1.0,1.0,1.0]),(1,4))
 
 ser = setupSerial(9600,10)
 sendArrayToSerial(ser,weights)
+ser.readline()
 sendArrayToSerial(ser,bias)
+ser.readline()
+sendArrayToSerial(ser,weights1)
+ser.readline()
+sendArrayToSerial(ser,bias1)
+ser.readline()
 sendArrayToSerial(ser,inputs)
+ser.readline()
 recieveArrayFromSerial(ser)
 ser.read_all()

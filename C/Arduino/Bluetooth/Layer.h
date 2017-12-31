@@ -11,9 +11,9 @@ class Layer {
 public:
 	Layer();
 	Layer(Matrix &weights, Matrix &bias, float (*activation)(float));
-	Layer(Layer &obj);
+	Layer(const Layer &obj);
 	~Layer();
-	Layer& operator=(Layer B);
+	Layer& operator=(const Layer &B);
 	Matrix transform(Matrix &input);
 	Matrix getWeights();
 	Matrix getBias();
@@ -21,6 +21,7 @@ public:
 	float (*(getActivation()))(float); //Function returning pointer to function taking a float and returning float.
 	
 	void updateWeights(Matrix &newWeights, Matrix &newBias);
+  static Layer fromSerial();
 };
 extern float relu_func(float input);
 extern float linear_func(float input);

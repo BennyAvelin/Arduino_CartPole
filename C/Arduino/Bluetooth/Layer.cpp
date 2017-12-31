@@ -20,7 +20,7 @@ Layer::Layer(){
 #endif
 }
 
-Layer::Layer(Layer & obj){
+Layer::Layer(const Layer & obj){
 #ifdef X86
   std::cout << "Layer  copied" << std::endl;
 #endif
@@ -47,7 +47,7 @@ Matrix Layer::transform(Matrix &input){
 Layer::~Layer(){
 }
 
-Layer& Layer::operator=(Layer obj){
+Layer& Layer::operator=(const Layer &obj){
 #ifdef X86
   std::cout << "Layer  copied by equals" << std::endl;
 #endif
@@ -77,3 +77,13 @@ void Layer::updateWeights(Matrix &newWeights, Matrix &newBias){
 Tuple Layer::getShape(){
 	return shape;
 }
+
+Layer Layer::fromSerial() {
+  Matrix weights = Matrix::fromSerial();
+  Serial.println(F("Recieved weights"));
+  Matrix bias = Matrix::fromSerial();
+  Serial.println(F("Recieved bias"));
+  Layer lay (weights,bias,*Activations.relu);
+  return lay;
+}
+

@@ -29,7 +29,7 @@ int main() {
 	float arr1[] = {1.0,1.0,2.3,4.2}; 
 	float arr2[] = {3.5,2.0032}; 
 	
-	std::cout << "Making matrix" << std::endl;
+	/*std::cout << "Making matrix" << std::endl;
 	Matrix inputs = Matrix(arr0,1,2);
 	std::cout << "Making matrix" << std::endl;
 	Matrix weights = Matrix(arr1,2,2);
@@ -53,7 +53,8 @@ int main() {
 	std::cout << sizeof(int) << std::endl;
 	std::cout << sizeof(Matrix) << std::endl;
 	std::cout << sizeof(Layer) << std::endl;
-	std::cout << sizeof(Network) << std::endl;
+	std::cout << sizeof(Network) << std::endl;*/
+	std::cout << {return "hello";} << std::endl;
 	while(true){}
 	//ans.print();
 	//ans.transpose().print();

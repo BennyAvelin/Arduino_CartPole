@@ -7,46 +7,30 @@
 #include "Layer.h"
 #include "Tuple.h"
 #include "Network.h"
+#include<Time.h>
 
 char data = 0;            //Variable for storing received data
 
+extern unsigned int __bss_end;
+extern unsigned int __heap_start;
+extern void *__brkval;
+
+int freeMemory() {
+  int free_memory;
+
+  if((int)__brkval == 0)
+     free_memory = ((int)&free_memory) - ((int)&__bss_end);
+  else
+    free_memory = ((int)&free_memory) - ((int)__brkval);
+
+  return free_memory;
+}
 
 void setup()
 {
     Serial.begin(9600);   //Sets the baud for serial data transmission                               
-}
-
-void outOfMemoryError() {
-  Serial.println(F("Out of memory"));
-}
-
-float squares(float x){
-  return x*x;
-}
-
-void getFloatFromSerial(float &buffer){
-  char *cBuffer = (char*) &buffer;
-  Serial.readBytes(cBuffer,sizeof(float));
-}
-
-void nFloatsFromSerial(float *array, int n){
-  for (int i=0; i<n; i++) {
-      getFloatFromSerial(array[i]);
-  }
-}
-
-Matrix readMatrixFromSerial() {
-  int rows = 0;
-  int columns = 0;
-  
-  Serial.readBytes((char*) &rows,sizeof(int));
-  Serial.readBytes((char*) &columns,sizeof(int));
-  
-  float buffer[rows*columns];
-  nFloatsFromSerial(buffer,rows*columns);
-  
-  Matrix tmp (buffer,rows,columns);
-  return tmp;
+    Serial.setTimeout(2000);
+    pinMode(LED_BUILTIN, OUTPUT);
 }
 
 void sendMatrixToSerial(Matrix &mat) {
@@ -58,36 +42,54 @@ void sendMatrixToSerial(Matrix &mat) {
 
 void loop()
 {
-  /*float arr0[] = {1.0,1.0,2.3}; 
-  float arr1[] = {1.0,1.0,2.3,4.2,5.3,7.2}; 
-  float arr2[] = {3.5,2.0032}; 
-  
-  Matrix inputs = Matrix(arr0,1,3);
-  Matrix weights = Matrix(arr1,3,2);
-  Matrix bias = Matrix(arr2,2,1);
-  Layer layer (weights,bias,*Activations.relu);
-  layer.getWeights().print();*/
   if (Serial.available() > 0) {
-    //Read weight matrix
+    Serial.println(freeMemory());
+    Network net = Network::fromSerial(2);
+    Matrix inputs = Matrix::fromSerial();
+    Matrix output = net.transform(inputs);
+    Serial.println(F("Recieved weights"));
+    Serial.println(freeMemory());
+    unsigned long time = millis();
+    for (int i=0; i<1000; i++) {
+      //Transform input
+      Matrix output1 = net.transform(inputs);
+    }
+    Serial.println(millis()-time);
+    Serial.println(freeMemory());
+
+    
+    /*//Read weight matrix
     Matrix weights = readMatrixFromSerial();
+    Serial.println("Recieved weights");
     //Read bias matrix
     Matrix bias = readMatrixFromSerial();
+    Serial.println("Recieved bias");
     //Setup layer
     Layer layer (weights,bias,*Activations.relu);
     Matrix weights1 = readMatrixFromSerial();
+    Serial.print("Recieved weights1");
+    Serial.print(weights1.shape().t1);
+    Serial.print(" ");
+    Serial.print(weights1.shape().t2);
+    Serial.println(" Thats it");
     //Read bias matrix
     Matrix bias1 = readMatrixFromSerial();
+    Serial.println("Recieved bias1");
     //Setup layer
     Layer layer1 (weights1,bias1,*Activations.linear);
 
     Network network(2);
-    *network[0] = layer;
-    *network[1] = layer1;
+    network.addStage(layer);
+    network.addStage(layer1);
     //Read input
     Matrix input = readMatrixFromSerial();
-    //Transform input
-    Matrix output = network.transform(input);
-    //Send transformed input
-    sendMatrixToSerial(output);
+    Serial.println("Recieved input");
+    unsigned long time = millis();
+    for (int i=0; i<1000; i++) {
+      //Transform input
+      Matrix output = network.transform(input);
+    }
+    Serial.println(millis()-time);
+    Serial.println(freeMemory());*/
   }
 }
