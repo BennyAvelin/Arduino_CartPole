@@ -1,15 +1,17 @@
+# 1 "/Users/avelin/python/Arduino_CartPole/C/Arduino/Bluetooth/Bluetooth.ino"
+# 1 "/Users/avelin/python/Arduino_CartPole/C/Arduino/Bluetooth/Bluetooth.ino"
 /*
 * Recieve a neural network over serial connection
 * Coder - Benny Avelin
 * Website - 
 */
-#include "Matrix.h"
-#include "Layer.h"
-#include "Tuple.h"
-#include "Network.h"
-#include<Time.h>
+# 7 "/Users/avelin/python/Arduino_CartPole/C/Arduino/Bluetooth/Bluetooth.ino" 2
+# 8 "/Users/avelin/python/Arduino_CartPole/C/Arduino/Bluetooth/Bluetooth.ino" 2
 
-char data = 0;            //Variable for storing received data
+# 10 "/Users/avelin/python/Arduino_CartPole/C/Arduino/Bluetooth/Bluetooth.ino" 2
+# 11 "/Users/avelin/python/Arduino_CartPole/C/Arduino/Bluetooth/Bluetooth.ino" 2
+
+char data = 0; //Variable for storing received data
 
 extern unsigned int __bss_end;
 extern unsigned int __heap_start;
@@ -28,9 +30,9 @@ int freeMemory() {
 
 void setup()
 {
-    Serial.begin(9600);   //Sets the baud for serial data transmission                               
+    Serial.begin(9600); //Sets the baud for serial data transmission                               
     Serial.setTimeout(2000);
-    pinMode(LED_BUILTIN, OUTPUT);
+    pinMode(13, 0x1);
 }
 
 void loop()
@@ -40,7 +42,7 @@ void loop()
     Network net = Network::fromSerial(2);
     Matrix inputs = Matrix::fromSerial();
     Matrix output = net.transform(inputs);
-    Serial.println(F("Recieved weights"));
+    Serial.println((reinterpret_cast<const __FlashStringHelper *>((__extension__({static const char __c[] __attribute__((__progmem__)) = ("Recieved weights"); &__c[0];})))));
     Serial.println(freeMemory());
     unsigned long time = millis();
     for (int i=0; i<1000; i++) {
@@ -50,7 +52,7 @@ void loop()
     Serial.println(millis()-time);
     Serial.println(freeMemory());
 
-    
+
     /*//Read weight matrix
     Matrix weights = readMatrixFromSerial();
     Serial.println("Recieved weights");

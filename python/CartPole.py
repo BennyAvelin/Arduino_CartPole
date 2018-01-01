@@ -82,5 +82,8 @@ sendArrayToSerial(ser,bias1)
 ser.readline()
 sendArrayToSerial(ser,inputs)
 ser.readline()
+ser.readline()
+ser.readline()
+
 recieveArrayFromSerial(ser)
 ser.read_all()

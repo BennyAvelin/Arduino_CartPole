@@ -37,7 +37,7 @@ void Network::addStage(const Layer &stage){
 		layers[filledLayers++] = stage;
 	}
 }
-#ifndef X86
+
 Network Network::fromSerial(int n){
   Network net (n);
   for (int i=0; i<n; i++) {
@@ -45,4 +45,4 @@ Network Network::fromSerial(int n){
   }
   return net;
 }
-#endif
+

@@ -1,0 +1,32 @@
+[
+  {
+    "Sourcefile": "",
+    "Include": "",
+    "Includepath": "/Applications/Arduino.app/Contents/Java/hardware/arduino/avr/cores/arduino"
+  },
+  {
+    "Sourcefile": "",
+    "Include": "",
+    "Includepath": "/Applications/Arduino.app/Contents/Java/hardware/arduino/avr/variants/standard"
+  },
+  {
+    "Sourcefile": "/Users/avelin/python/Arduino_CartPole/C/Arduino/Bluetooth/build/sketch/Bluetooth.ino.cpp",
+    "Include": "",
+    "Includepath": ""
+  },
+  {
+    "Sourcefile": "/Users/avelin/python/Arduino_CartPole/C/Arduino/Bluetooth/build/sketch/Layer.cpp",
+    "Include": "",
+    "Includepath": ""
+  },
+  {
+    "Sourcefile": "/Users/avelin/python/Arduino_CartPole/C/Arduino/Bluetooth/build/sketch/Matrix.cpp",
+    "Include": "",
+    "Includepath": ""
+  },
+  {
+    "Sourcefile": "/Users/avelin/python/Arduino_CartPole/C/Arduino/Bluetooth/build/sketch/Network.cpp",
+    "Include": "",
+    "Includepath": ""
+  }
+]

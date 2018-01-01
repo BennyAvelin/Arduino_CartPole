@@ -1,3 +1,6 @@
+#include <Arduino.h>
+#line 1 "/Users/avelin/python/Arduino_CartPole/C/Arduino/Bluetooth/Bluetooth.ino"
+#line 1 "/Users/avelin/python/Arduino_CartPole/C/Arduino/Bluetooth/Bluetooth.ino"
 /*
 * Recieve a neural network over serial connection
 * Coder - Benny Avelin
@@ -86,3 +89,4 @@ void loop()
     Serial.println(freeMemory());*/
   }
 }
+

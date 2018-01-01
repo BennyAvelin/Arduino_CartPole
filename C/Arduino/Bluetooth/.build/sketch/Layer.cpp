@@ -77,7 +77,7 @@ void Layer::updateWeights(Matrix &newWeights, Matrix &newBias){
 Tuple Layer::getShape() const{
 	return shape;
 }
-#ifndef X86
+
 Layer Layer::fromSerial() {
   Matrix weights = Matrix::fromSerial();
   Serial.println(F("Recieved weights"));
@@ -86,4 +86,4 @@ Layer Layer::fromSerial() {
   Layer lay (weights,bias,*Activations::relu);
   return lay;
 }
-#endif
+

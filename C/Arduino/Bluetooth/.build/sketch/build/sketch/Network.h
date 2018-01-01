@@ -27,9 +27,7 @@ public:
    * and there has to be room for that in the memory, otherwise odd things will start to happen.
    */
 	void addStage(const Layer &stage);
-#ifndef X86
-	static Network fromSerial(int n);
-#endif
+  static Network fromSerial(int n);
 };
 
 #endif

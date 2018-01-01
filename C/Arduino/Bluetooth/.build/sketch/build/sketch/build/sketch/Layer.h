@@ -9,34 +9,29 @@ class Layer {
 	Matrix bias;
 	float (*activation)(float);
 public:
-	//----------------Constructors and Destructors-----------------------
+  //----------------Constructors and Destructors-----------------------
 	Layer();
 	Layer(Matrix &weights, Matrix &bias, float (*activation)(float));
 	Layer(const Layer &obj);
 	~Layer();
-	//----------------Operators -----------------------------------------
+  //----------------Operators -----------------------------------------
 	Layer& operator=(const Layer &B);
-	//----------------Basic operations-----------------------------------
-	/**
-	* Transforms the input matrix by performing the computation
-	* activation(input*weight+bias) and returning the result as a matrix.
-	*/
+  //----------------Basic operations-----------------------------------
+  /**
+   * Transforms the input matrix by performing the computation
+   * activation(input*weight+bias) and returning the result as a matrix.
+   */
 	Matrix transform(Matrix &input) const;
-	/**
-	* Getters for the weights and bias
-	*/
+  /**
+   * Getters for the weights and bias
+   */
 	Matrix getWeights() const;
 	Matrix getBias() const;
 	Tuple getShape() const;
 	float (*(getActivation()))(float); //Function returning pointer to function taking a float and returning float.
-
+	
 	void updateWeights(Matrix &newWeights, Matrix &newBias);
-	/*
-	 * Serial stuff for the Arduino
-	 */
-#ifndef X86
-	static Layer fromSerial();
-#endif
+  static Layer fromSerial();
 };
 
 class Activations {
