@@ -9,7 +9,6 @@ import gym
 from gym import spaces
 from gym.utils import seeding
 import numpy as np
-from random import Random
 
 logger = logging.getLogger(__name__)
 
@@ -21,14 +20,14 @@ class MyCartPoleEnv(gym.Env):
 
     def __init__(self):
         self.gravity = 9.8
-        self.masscart = 0.25
-        self.masspole = 0.25
+        self.masscart = 1.0
+        self.masspole = 1.0
         self.total_mass = (self.masspole + self.masscart)
-        self.length = 0.28 # actually half the pole's length
+        self.length = 0.5 # actually half the pole's length
         self.polemass_length = (self.masspole * self.length)
-        self.force_mag = 0.1
+        self.force_mag = 20.0
         self.tau = 0.02  # seconds between state updates
-        self.wheelradii = 0.03
+        self.wheelradii = 0.2
         # Angle at which to fail the episode
         self.theta_threshold_radians = 12 * 2 * math.pi / 360
         self.x_threshold = 2.4
@@ -36,15 +35,12 @@ class MyCartPoleEnv(gym.Env):
         # Angle limit set to 2 * theta_threshold_radians so failing observation is still within bounds
         high = np.array([
             self.x_threshold * 2,
-            np.finfo(np.float32).max,
-            self.theta_threshold_radians * 2,
-            np.finfo(np.float32).max])
+            self.theta_threshold_radians * 2])
 
         self.action_space = spaces.Discrete(2)
         self.observation_space = spaces.Box(-high, high)
 
         self._seed()
-        self.random = Random()
         self.viewer = None
         self.state = None
 
@@ -67,7 +63,7 @@ class MyCartPoleEnv(gym.Env):
         #Small angle approximation of the acceleration at the reader
         x  = x + self.tau * x_dot
         x_dot = x_dot + self.tau * xacc
-        theta = round(theta + self.tau * theta_dot,2)+0.005*self.random.gauss(0,1)
+        theta = theta + self.tau * theta_dot
         theta_dot = theta_dot + self.tau * thetaacc
         self.state = (x,x_dot,theta,theta_dot)
         

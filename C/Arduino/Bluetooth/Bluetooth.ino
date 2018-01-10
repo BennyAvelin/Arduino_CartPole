@@ -7,9 +7,25 @@
 #include "Layer.h"
 #include "Tuple.h"
 #include "Network.h"
+#include "HotStepper.h"
 #include<Time.h>
+#define TEST
+
+HotStepper stepper1(&PORTB, 0b00001111);
 
 char data = 0;            //Variable for storing received data
+
+const int xpin = A2;                  // x-axis of the accelerometer
+const int ypin = A1;                  // y-axis
+const int zpin = A0;                  // z-axis (only on 3-axis models)
+float currentAngle = 0.0;
+int dir = 0;
+#define WINDOW 5
+#define smoothingVal 1
+#define SMOOTH(x) (smoothingVal*(((int) x)/smoothingVal))
+float windowx[WINDOW];
+float windowy[WINDOW];
+float windowz[WINDOW];
 
 extern unsigned int __bss_end;
 extern unsigned int __heap_start;
@@ -26,16 +42,101 @@ int freeMemory() {
   return free_memory;
 }
 
+#define AVGSTEPS 1
+#define DEG90 64.5*AVGSTEPS
+
+int pos = 0;
+
+void averagedAcc(float *arr) {
+  windowx[pos] = ((float) analogRead(xpin))/WINDOW;
+  windowy[pos] = ((float) analogRead(ypin))/WINDOW;
+  windowz[pos] = ((float) analogRead(zpin))/WINDOW;
+  
+  for (int i = 0; i<3; i++){
+    arr[i] = 0;
+  }
+  for (int i=0; i<WINDOW; i++) {
+    arr[0] += windowx[i];
+    arr[1] += windowy[i];
+    arr[2] += windowz[i];
+  }
+  pos = (pos+1) % WINDOW;
+}
+
+void computeState(float *state) {
+  #define SPR 2048.0
+  #define R 0.033
+  float pos = R*stepper1.currentPos()/SPR;
+  state[0] = pos;
+  float arr[3];
+  averagedAcc(arr);
+  averagedAcc(arr);
+  state[1] = SMOOTH(arr[0]);
+  state[2] = SMOOTH(arr[1]);
+  state[3] = SMOOTH(arr[2]);
+}
+
+void sendState(const float *state) {
+  Serial.write((char*) &state[0],sizeof(float));
+  Serial.write((char*) &state[1],sizeof(float));
+  Serial.write((char*) &state[2],sizeof(float));
+  Serial.write((char*) &state[3],sizeof(float));
+  //Serial.print(state[0]);
+  //Serial.print("\t");
+  //Serial.println(state[1]);
+}
+
 void setup()
 {
-    Serial.begin(9600);   //Sets the baud for serial data transmission                               
-    Serial.setTimeout(2000);
+    Serial.begin(115200);   //Sets the baud for serial data transmission                               
+    Serial.setTimeout(100000);
     pinMode(LED_BUILTIN, OUTPUT);
+    int arr[3];
+    HotStepper::setup();
+    stepper1.turn(1,0);
 }
+
+float position = 0;
 
 void loop()
 {
-  if (Serial.available() > 0) {
+#ifdef TEST
+  delay(2);
+  float value[3];
+  stepper1.continuousTurn(dir = !dir);
+  for (int i=0; i<1; i++) {
+    averagedAcc(value);
+  }
+  Serial.print(value[2]);
+  /*// print a tab between values:
+  Serial.print("\t");
+  Serial.print((value[1]+value[0]));
+  // print a tab between values:
+  Serial.print("\t");
+  Serial.print(((value[2]+value[0])));*/
+  Serial.println("");
+  delay(20);
+#else
+  float state[4];
+  computeState(state);
+  sendState(state);
+  int action = Serial.parseInt();
+  if (action == -1) {
+    //This implies we should reset
+    //Serial.println(stepper1.currentPos());
+    stepper1.returnToZero();
+    while(!stepper1.ready()) {}
+    while (Serial.parseInt() == -1) {}
+    //Here we should make a read of the sensor values to relase the stored values
+    float arr[3];
+    for (int i=0; i<WINDOW; i++){
+      averagedAcc(arr);
+    }
+  } else {
+    stepper1.continuousTurn(action);
+  }
+#endif
+  /*if (Serial.available() > 0) {
     Serial.println(freeMemory());
     Network net = Network::fromSerial(2);
     Matrix inputs = Matrix::fromSerial();
@@ -48,7 +149,7 @@ void loop()
       Matrix output1 = net.transform(inputs);
     }
     Serial.println(millis()-time);
-    Serial.println(freeMemory());
+    Serial.println(freeMemory());*/
 
     
     /*//Read weight matrix
@@ -84,5 +185,4 @@ void loop()
     }
     Serial.println(millis()-time);
     Serial.println(freeMemory());*/
-  }
 }

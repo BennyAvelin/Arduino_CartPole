@@ -28,8 +28,14 @@ public:
 	Matrix getWeights() const;
 	Matrix getBias() const;
 	Tuple getShape() const;
-	float (*(getActivation()))(float); //Function returning pointer to function taking a float and returning float.
-
+	/*
+	 * Function returning pointer to function 
+	 * taking a float and returning float.
+	 */
+	float (*(getActivation()))(float);
+	/*
+	 * Update the weights for this Layer.
+	 */
 	void updateWeights(Matrix &newWeights, Matrix &newBias);
 	/*
 	 * Serial stuff for the Arduino

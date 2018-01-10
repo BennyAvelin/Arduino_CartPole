@@ -9,7 +9,6 @@ import gym
 from gym import spaces
 from gym.utils import seeding
 import numpy as np
-from random import Random
 
 logger = logging.getLogger(__name__)
 
@@ -21,14 +20,15 @@ class MyCartPoleEnv(gym.Env):
 
     def __init__(self):
         self.gravity = 9.8
-        self.masscart = 0.25
-        self.masspole = 0.25
+        self.masscart = 1.0
+        self.masspole = 1.0
         self.total_mass = (self.masspole + self.masscart)
-        self.length = 0.28 # actually half the pole's length
+        self.length = 0.5 # actually half the pole's length
         self.polemass_length = (self.masspole * self.length)
-        self.force_mag = 0.1
+        self.force_mag = 2.0
         self.tau = 0.02  # seconds between state updates
-        self.wheelradii = 0.03
+        self.wheelradii = 0.2
+
         # Angle at which to fail the episode
         self.theta_threshold_radians = 12 * 2 * math.pi / 360
         self.x_threshold = 2.4
@@ -39,13 +39,25 @@ class MyCartPoleEnv(gym.Env):
             np.finfo(np.float32).max,
             self.theta_threshold_radians * 2,
             np.finfo(np.float32).max])
+        high2 = np.array([
+            np.finfo(np.float32).max,
+            self.gravity*math.cos(2*self.theta_threshold_radians),
+            np.finfo(np.float32).max,
+            np.finfo(np.float32).max
+        ])
+        low2 = np.array([
+            -np.finfo(np.float32).max,
+            -1,
+            -np.finfo(np.float32).max,
+            -np.finfo(np.float32).max
+        ])
 
         self.action_space = spaces.Discrete(2)
-        self.observation_space = spaces.Box(-high, high)
+        self.observation_space = spaces.Box(low2, high2)
 
         self._seed()
-        self.random = Random()
         self.viewer = None
+        self.states = None
         self.state = None
 
         self.steps_beyond_done = None
@@ -56,20 +68,27 @@ class MyCartPoleEnv(gym.Env):
 
     def _step(self, action):
         assert self.action_space.contains(action), "%r (%s) invalid"%(action, type(action))
-        state = self.state
-        x, x_dot, theta, theta_dot = state
+        states = self.states
+        x, x_dot, theta, theta_dot = states
 
         torque = self.force_mag if action==1 else -self.force_mag
         costheta = math.cos(theta)
         sintheta = math.sin(theta)
         thetaacc = (torque + self.masspole*self.gravity*self.polemass_length*sintheta)/(self.masspole*self.polemass_length*self.polemass_length)
         xacc = -torque/(self.wheelradii*(self.total_mass))
-        #Small angle approximation of the acceleration at the reader
+        #Observed acceleration
+        oacc_x_prev , oacc_y_prev, tmp1, tmp2 = self.state
+        oacc_x = torque/self.polemass_length + self.gravity*sintheta
+        oacc_y = self.gravity*costheta
+        oacc_x_dot = oacc_x_prev - oacc_x
+        oacc_y_dot = oacc_y_prev - oacc_y
+        
         x  = x + self.tau * x_dot
         x_dot = x_dot + self.tau * xacc
-        theta = round(theta + self.tau * theta_dot,2)+0.005*self.random.gauss(0,1)
+        theta = theta + self.tau * theta_dot
         theta_dot = theta_dot + self.tau * thetaacc
-        self.state = (x,x_dot,theta,theta_dot)
+        self.states = (x,x_dot,theta,theta_dot)
+        self.state = (oacc_x,oacc_y,oacc_x_dot,oacc_y_dot)
         
         done =  x < -self.x_threshold \
                 or x > self.x_threshold \
@@ -92,7 +111,15 @@ class MyCartPoleEnv(gym.Env):
         return np.array(self.state), reward, done, {}
 
     def _reset(self):
-        self.state = self.np_random.uniform(low=-0.05, high=0.05, size=(4,))
+        self.states = self.np_random.uniform(low=-0.05, high=0.05, size=(4,))
+        x, x_dot, theta, theta_dot = self.states
+        costheta = math.cos(theta)
+        sintheta = math.sin(theta)
+        oacc_x = 0
+        oacc_y = 0
+        oacc_x_dot = 0
+        oacc_y_dot = 0
+        self.state = (oacc_x,oacc_y,oacc_x_dot,oacc_y_dot)
         self.steps_beyond_done = None
         return np.array(self.state)
 
@@ -139,9 +166,9 @@ class MyCartPoleEnv(gym.Env):
             self.track.set_color(0,0,0)
             self.viewer.add_geom(self.track)
 
-        if self.state is None: return None
+        if self.states is None: return None
 
-        x = self.state
+        x = self.states
         cartx = x[0]*scale+screen_width/2.0 # MIDDLE OF CART
         self.carttrans.set_translation(cartx, carty)
         self.poletrans.set_rotation(-x[2])

@@ -9,9 +9,26 @@ import gym
 from gym import spaces
 from gym.utils import seeding
 import numpy as np
-from random import Random
+import serial
+import numpy as np
+import struct
+import time
 
 logger = logging.getLogger(__name__)
+
+def setupSerial(baudrate, timeout):
+    #ser = serial.Serial('/dev/cu.HC-06-DevB',baudrate,timeout=timeout)
+    ser = serial.Serial('/dev/cu.usbmodem1421',baudrate,timeout=timeout)
+    return ser
+    
+def recieveStateFromSerial(ser):
+    sizeOfFloat = 4
+    buffer = ser.read(sizeOfFloat*4)
+    array = []
+    for index in range(0,len(buffer),sizeOfFloat):
+        array += [struct.unpack_from('f',bytes(buffer),index)[0]]
+    return array
+
 
 class MyCartPoleEnv(gym.Env):
     metadata = {
@@ -21,55 +38,66 @@ class MyCartPoleEnv(gym.Env):
 
     def __init__(self):
         self.gravity = 9.8
-        self.masscart = 0.25
-        self.masspole = 0.25
+        self.masscart = 1.0
+        self.masspole = 1.0
         self.total_mass = (self.masspole + self.masscart)
-        self.length = 0.28 # actually half the pole's length
+        self.length = 0.5 # actually half the pole's length
         self.polemass_length = (self.masspole * self.length)
-        self.force_mag = 0.1
+        self.force_mag = 5.0
         self.tau = 0.02  # seconds between state updates
-        self.wheelradii = 0.03
+        self.wheelradii = 0.2
+
         # Angle at which to fail the episode
-        self.theta_threshold_radians = 12 * 2 * math.pi / 360
+        self.ampfac = 50
+        
+        #self.theta_threshold_radians = 12 * 2 * math.pi / 360
+        self.theta_threshold_radians = 0.3
+        self.topValue = 378.0
+        self.deg90 = 304.0
+        #self.minTheta = 355.0 / self.ampfac
+        #self.maxTheta = 400.0 / self.ampfac
         self.x_threshold = 2.4
 
         # Angle limit set to 2 * theta_threshold_radians so failing observation is still within bounds
-        high = np.array([
+        high = np.array([ 
             self.x_threshold * 2,
             np.finfo(np.float32).max,
-            self.theta_threshold_radians * 2,
+            self.theta_threshold_radians,
             np.finfo(np.float32).max])
 
         self.action_space = spaces.Discrete(2)
         self.observation_space = spaces.Box(-high, high)
 
         self._seed()
-        self.random = Random()
         self.viewer = None
         self.state = None
 
         self.steps_beyond_done = None
+        self.ser = setupSerial(115200,10)
 
+    def _toAngle(self,z_acc):
+        return (z_acc-self.topValue)/(self.topValue-self.deg90)
+    
     def _seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
+        
+    def _getstate(self,x,theta):
+        newx, n_x_acc, n_y_acc, n_z_acc = recieveStateFromSerial(self.ser)
+        n_z_acc = self._toAngle(n_z_acc)
+        x_dot = newx-x
+        theta_dot = n_z_acc-theta
+        theta = n_z_acc
+        x = newx
+        return [x,x_dot,theta,theta_dot]
 
     def _step(self, action):
         assert self.action_space.contains(action), "%r (%s) invalid"%(action, type(action))
-        state = self.state
-        x, x_dot, theta, theta_dot = state
-
-        torque = self.force_mag if action==1 else -self.force_mag
-        costheta = math.cos(theta)
-        sintheta = math.sin(theta)
-        thetaacc = (torque + self.masspole*self.gravity*self.polemass_length*sintheta)/(self.masspole*self.polemass_length*self.polemass_length)
-        xacc = -torque/(self.wheelradii*(self.total_mass))
-        #Small angle approximation of the acceleration at the reader
-        x  = x + self.tau * x_dot
-        x_dot = x_dot + self.tau * xacc
-        theta = round(theta + self.tau * theta_dot,2)+0.005*self.random.gauss(0,1)
-        theta_dot = theta_dot + self.tau * thetaacc
-        self.state = (x,x_dot,theta,theta_dot)
+        #prev_state = self.state
+        x, x_dot, theta, theta_dot = self.state
+        self.ser.write(bytes(str(action)+"\n",'utf-8'))
+        x, x_dot, theta, theta_dot = self._getstate(x,theta)
+        self.state = [x,x_dot,theta,theta_dot]
         
         done =  x < -self.x_threshold \
                 or x > self.x_threshold \
@@ -92,7 +120,11 @@ class MyCartPoleEnv(gym.Env):
         return np.array(self.state), reward, done, {}
 
     def _reset(self):
-        self.state = self.np_random.uniform(low=-0.05, high=0.05, size=(4,))
+        self.ser.write(bytes(str(-1)+"\n",'utf-8'))
+        input("Reset the bot to standing and press enter when done...")
+        self.ser.read_all()
+        self.ser.write(bytes(str(0)+"\n",'utf-8'))
+        self.state = self._getstate(0,0)
         self.steps_beyond_done = None
         return np.array(self.state)
 
